@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "knex": "^3.1.0",
+    "pg": "^8.16.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "name": "wt-journey-backend-01-etapa-4-lucasgfoli",
+  "version": "1.0.0",
+  "description": "O Departamento de Polícia agora precisa garantir que apenas pessoas autorizadas tenham acesso ao sistema. Após a persistência dos dados com PostgreSQL (Etapa 3), chegou a hora de implementar **segurança, autenticação e autorização** para proteger os registros de agentes e casos.  \r Sua missão será evoluir a API para um nível profissional, adicionando **hashing de senhas**, **geração de tokens JWT** e **proteção de rotas**, além de **documentar todo o processo** para que a aplicação esteja pronta para uso real em produção.",
+  "main": "knexfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wt-journey-backend-01/wt-journey-backend-01-etapa-4-lucasgfoli.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wt-journey-backend-01/wt-journey-backend-01-etapa-4-lucasgfoli/issues"
+  },
+  "homepage": "https://github.com/wt-journey-backend-01/wt-journey-backend-01-etapa-4-lucasgfoli#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
