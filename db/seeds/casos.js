@@ -3,15 +3,8 @@
  * @returns { Promise<void> }
  */
 exports.seed = async function(knex) {
-  // Apaga dados existentes (para evitar duplicação ao rodar mais de uma vez)
+  // Apaga dados existentes para evitar duplicação
   await knex('casos').del()
-  await knex('agentes').del()
-
-  // Insere agentes
-  const agentes = await knex('agentes').insert([
-    { id: 1, nome: 'João Silva', dataDeIncorporacao: '2020-05-10', cargo: 'Detetive' },
-    { id: 2, nome: 'Maria Souza', dataDeIncorporacao: '2018-11-22', cargo: 'Investigadora' }
-  ]).returning('id')
 
   // Insere casos (ligados aos agentes)
   await knex('casos').insert([
