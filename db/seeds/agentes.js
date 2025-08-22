@@ -8,7 +8,7 @@ exports.seed = async function(knex) {
 
   // Insere agentes
   await knex('agentes').insert([
-    { id: 1, nome: 'João Silva', dataDeIncorporacao: '2020-05-10', cargo: 'Detetive' },
-    { id: 2, nome: 'Maria Souza', dataDeIncorporacao: '2018-11-22', cargo: 'Investigadora' }
+    { id: 1, nome: 'Roberto Caieiro', dataDeIncorporacao: '2020-05-10', cargo: 'Detetive' },
+    { id: 2, nome: 'Álvaro de Campos', dataDeIncorporacao: '2018-11-22', cargo: 'Investigador' }
   ])
 }
