@@ -1,38 +1,77 @@
 const usuariosRepository = require('../repositories/usuariosRepository')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const handlerError = require('../utils/errorHandler')
 const validarSenha = require('../utils/validarSenha')
 
-async function getAllUsers(req, res) {
+// Login -> JWT
+const login = async (req, res, next) => {
     try {
-        const usuarios = await usuariosRepository.getAllUsuarios()
-        res.status(200).json(Array.isArray(usuarios) ? usuarios : [])
-    }
-    catch (error) {
-        handlerError(res, error)
+        const { email, senha } = req.body
+
+        const user = await usuariosRepository.findByEmail(email)
+
+        if (!user) {
+            return next(
+                new handlerError('user not found', 404, {
+                    email: 'Usuário não encontrado',
+                })
+            )
+        }
+
+        const isPasswordValid = await bcrypt.compare(senha, user.senha)
+
+        if (!isPasswordValid) {
+            return next(
+                new handlerError('Invalid password'), 401, {
+                senha: 'Senha inválida',
+            }
+            )
+        }
+
+        const token = jwt.sign({ id: user.id, nome: user.nome, email: user.email }, process.env.JWT_SECRET, {
+            expiresIn: '1d'
+        })
+
+        res.status(200).json({ message: 'Sucesso no login', token })
+    } catch (error) {
+        next(new handlerError('Usuário não encontrado', 500, error.message))
     }
 }
 
-async function createUser(req, res) {
+// Cadastro -> 
+
+const signUp = async (req, res, next) => {
     try {
         const { nome, email, senha } = req.body
 
-        if( !nome || !email || !senha)
-            return res.status(400).json({message: 'Todos os campos são obrigatórios!'})
+        const user = await usuariosRepository.findByEmail(email)
 
-        if(!validarSenha(senha))
-            return res.status(400).json({message: 'A senha deve conter no mínimo 8 caracteres, uma letra maiúscula e uma minúscula, um número e um caractere especial.'})
-        
-        const newUser = { nome, email, senha }
-        const userCreated = await usuariosRepository.create(newUser)
+        if (user) {
+            return next(new handlerError('Usuário já existe'), 400, {
+                email: 'Usuário já existe'
+            })
+        }
 
-        return res.status(201).json(userCreated)
-    
+        const salt = await bcrypt.genSalt(parseInt(process.env.SALT_ROUNDS))
+        const hashSenha = await bcrypt.hash(senha, salt)
+
+        const novoUsuario = await usuariosRepository.insertUser({
+            nome,
+            email,
+            senha: hashSenha,
+        })
+
+        res.status(201).json({
+            message: 'Usuario criado com sucesso',
+            usuario: novoUsuario,
+        })
     } catch (error) {
-        handlerError(res, error)
+        next(new handlerError('Erro ao criar usuario', 500, error.message))
     }
 }
 
 module.exports = {
-    getAllUsers,
-    createUser
+    login,
+    signUp
 }

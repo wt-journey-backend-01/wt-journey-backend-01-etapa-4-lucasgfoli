@@ -35,3 +35,43 @@ docker-compose down
 ```
 
 Certifique-se de que o arquivo knexfile.js está configurado corretamente para o ambiente de desenvolvimento.
+
+## Autenticação
+
+### Registro de usuário
+
+- **Endpoint:** `POST /auth/register`
+- **Corpo da requisição:**
+  ```json
+  {
+    "nome": "Seu Nome",
+    "email": "email@example.com",
+    "senha": "SenhaSegura123!"
+  }
+  ```
+- **Retorno:** usuário criado com status `201`
+
+### Login
+
+- **Endpoint:** `POST /auth/login`
+- **Corpo da requisição:**
+  ```json
+  {
+    "email": "email@example.com",
+    "senha": "SenhaSegura123!"
+  }
+  ```
+- **Retorno:**
+  ```json
+  {
+    "acess_token": "<token JWT aqui>"
+  }
+  ```
+
+### Uso do token JWT
+
+Enviar o token no header `Authorization` em todas as requisições protegidas:
+```
+Authorization: Bearer <token>
+```
+O token expira após um tempo configurado para segurança.
