@@ -11,13 +11,13 @@ const login = async (req, res, next) => {
 
         const user = await usuariosRepository.findByEmail(email)
 
-        if (!user) 
+        if (!user)
             return res.status(404).json({ errors: { email: 'Usuário não encontrado' } })
 
         const isPasswordValid = await bcrypt.compare(senha, user.senha)
 
         if (!isPasswordValid)
-            res.status(401).json({ errors: { senha: 'Senha inválida' } })
+            return res.status(401).json({ errors: { senha: 'Senha inválida' } })
 
         const token = jwt.sign({ id: user.id, nome: user.nome, email: user.email }, process.env.JWT_SECRET, {
             expiresIn: '1d'
@@ -39,27 +39,27 @@ const signUp = async (req, res, next) => {
         const extraFields = receivedFields.filter(field => !allowedFields.includes(field))
         const missingFields = allowedFields.filter(field => !receivedFields.includes(field))
 
-        if ( missingFields.length > 0)
-            return res.status(400).json({message: `Campos obrigatórios ausentes: ${missingFields.join(', ')}`})
+        if (missingFields.length > 0)
+            return res.status(400).json({ message: `Campos obrigatórios ausentes: ${missingFields.join(', ')}` })
 
-        if ( extraFields.length > 0)
-            return res.status(400).json({message: `Campos extras não permitidos: ${extraFields.join(', ')}`})
+        if (extraFields.length > 0)
+            return res.status(400).json({ message: `Campos extras não permitidos: ${extraFields.join(', ')}` })
 
-        if (!nome || typeof nome !== 'string' || nome.trim() === '')
-            return res.status(400).json({ errors: {nome: 'O nome é obrigatório e não deve ser uma string vazia'} })
-
+        if (nome === undefined || nome === null || typeof nome !== 'string' || nome.trim() === '') {
+            return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } });
+        }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-        if (!email || !emailRegex.test(email))
-            return res.status(400).json({ errors: {email: 'Email inválido ou ausente'} })
+        if (email === undefined || email === null || typeof email !== 'string' || !emailRegex.test(email))
+            return res.status(400).json({ errors: { email: 'Email inválido ou ausente' } })
 
-        if (!senha || !validarSenha(senha))
-            return res.status(400).json({ errors: {senha: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.'} })
+        if (senha === undefined || senha === null || !validarSenha(senha))
+            return res.status(400).json({ errors: { senha: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.' } })
 
         const user = await usuariosRepository.findByEmail(email)
 
-        if (user) 
-            return res.status(400).json({ errors: {email: 'Usuário já existe'} })
+        if (user)
+            return res.status(400).json({ errors: { email: 'Usuário já existe' } })
 
         const saltRounds = parseInt(process.env.SALT_ROUNDS) || 10
         const salt = await bcrypt.genSalt(saltRounds)
@@ -83,15 +83,21 @@ const signUp = async (req, res, next) => {
 const revokedTokens = [];
 
 const logout = (req, res) => {
-    try{
+    try {
         const token = req.headers['authorization']?.split(' ')[1];
+        const secret = process.env.JWT_SECRET
 
         if (!token)
-            return res.status(400).json({ errors: {token: 'Token não fornecido'} });
+            return res.status(400).json({ errors: { token: 'Token não fornecido' } });
 
-        revokedTokens.push(token);
+        jwt.verify(token, secret, (err, decoded) => {
+            if (err)
+                return res.status(401).json({ errors: { token: 'Token inválido ou expirado' } });
 
-        res.status(200).json({ message: 'Logout realizado com sucesso' });
+
+            revokedTokens.push(token);
+            res.status(200).json({ message: 'Logout realizado com sucesso' });
+        })
 
     } catch (error) {
         console.error('Erro ao fazer logout:', error);
@@ -104,8 +110,8 @@ const getMe = async (req, res, next) => {
         const userId = req.user.id
         const user = await usuariosRepository.findById(userId)
 
-        if( !user )
-            return res.status(404).json({ error: {user: 'Usuário não encontrado'} })
+        if (!user)
+            return res.status(404).json({ error: { user: 'Usuário não encontrado' } })
 
         const { senha, ...userWithoutSenha } = user
 
