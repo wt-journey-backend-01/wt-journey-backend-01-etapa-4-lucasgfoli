@@ -4,7 +4,7 @@ function authMiddleware (req, res, next){
     const authHeader = req.headers.authorization
 
     if(!authHeader)
-        return res.status(401).json({message: 'Token não fornecido'})
+        return res.status(401).json({message: 'Acesso negado'})
 
     const token = authHeader.split(' ')[1]
 
@@ -13,16 +13,14 @@ function authMiddleware (req, res, next){
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
-
         req.user = decoded
-
         next()
     }
     catch (error) {
-        return res.status(401).json({message: 'Token inválido'})
+        console.error('Erro ao verificar o token:', error.message)
+
+        return res.status(500).json({message: 'Problema no servidor. Tente novamente mais tarde'})
     }
 }
 
 module.exports = authMiddleware
-
-// Melhorar tratamento desse código

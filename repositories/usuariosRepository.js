@@ -17,18 +17,18 @@ async function update(id, usuario) {
     const count = await knex('usuarios').where({ id }).update(usuario)
     
     if( count === 0 ) return null
-    return findById(id)
+    return findUserById(id)
 }
 
 async function patchById(id, updateUsuario) {
     const count = await knex('usuarios').where({ id }).update(updateUsuario)
     
     if( count === 0 ) return null
-    return findById(id)    
+    return findUserById(id)    
 }
 
 async function deleteById(id) {
-    const usuario = await findById(id)
+    const usuario = await findUserById(id)
 
     if(!usuario) return null
 

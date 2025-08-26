@@ -17,7 +17,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "start": "node server.js",
+    "start": "nodemon server.js",
     "db:cli": "docker exec -it postgres-database psql -U postgres -d policia_db"
   },
   "repository": {

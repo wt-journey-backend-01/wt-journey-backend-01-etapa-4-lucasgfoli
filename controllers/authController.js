@@ -21,19 +21,14 @@ const login = async (req, res, next) => {
 
         const isPasswordValid = await bcrypt.compare(senha, user.senha)
 
-        if (!isPasswordValid) {
-            return next(
-                new handlerError('Invalid password'), 401, {
-                senha: 'Senha inválida',
-            }
-            )
-        }
+        if (!isPasswordValid)
+            return next(new handlerError('Senha inválida', 401, { senha: 'Senha inválida' }))
 
         const token = jwt.sign({ id: user.id, nome: user.nome, email: user.email }, process.env.JWT_SECRET, {
             expiresIn: '1d'
         })
 
-        res.status(200).json({ message: 'Sucesso no login', token })
+        res.status(200).json({ acces_token: token })
     } catch (error) {
         next(new handlerError('Usuário não encontrado', 500, error.message))
     }
@@ -43,7 +38,24 @@ const login = async (req, res, next) => {
 
 const signUp = async (req, res, next) => {
     try {
-        const { nome, email, senha } = req.body
+        const allowedFields = ['nome', 'email', 'senha']
+        const receivedFields = Object.keys(req.body)
+
+        const extraFields = receivedFields.filter(field => !allowedFields.includes(field))
+
+        if ( extraFields.length > 0)
+            return res.status(400).json({message: `Campos extras não permitidos: ${extraFields.join(', ')}`})
+
+        if (!nome || typeof nome !== string || nome.trim() === '')
+            return res.status(400).json({ message: 'O nome é obrigatório e não deve ser uma string vazia' })
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+        if (!email || !emailRegex.test(email))
+            return res.status(400).json({ message: 'Email inválido ou ausente' })
+
+        if (!senha || !validarSenha(senha))
+            return res.status(400).json({ message: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.' })
 
         const user = await usuariosRepository.findByEmail(email)
 
