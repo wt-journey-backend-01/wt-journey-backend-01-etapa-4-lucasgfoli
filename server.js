@@ -7,7 +7,6 @@ const authMiddleware = require('./middlewares/authMiddleware.js')
 const agentesRoutes = require('./routes/agentesRoutes.js')
 const casosRoutes = require('./routes/casosRoutes.js')
 const authRoutes = require('./routes/authRoutes.js')
-const profileRoutes = require('./routes/profileRoutes.js')
 const swaggerUi = require('swagger-ui-express')
 const swaggerSpec = require('./docs/swagger.js')
 
