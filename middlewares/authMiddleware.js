@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const { revokedTokens } = require('../controllers/authController')
 
 function authMiddleware (req, res, next){
     const authHeader = req.headers.authorization
@@ -10,6 +11,9 @@ function authMiddleware (req, res, next){
 
     if(!token)
         return res.status(401).json({message: 'Token mal formatado'})
+
+    if( revokedTokens.includes(token) )
+        return res.status(401).json({message: 'Token inválido'})
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)

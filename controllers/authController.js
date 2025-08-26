@@ -11,24 +11,19 @@ const login = async (req, res, next) => {
 
         const user = await usuariosRepository.findByEmail(email)
 
-        if (!user) {
-            return next(
-                new handlerError('user not found', 404, {
-                    email: 'Usuário não encontrado',
-                })
-            )
-        }
+        if (!user) 
+            return res.status(404).json({ message: 'Usuário não encontrado', email: 'Usuário não encontrado' })
 
         const isPasswordValid = await bcrypt.compare(senha, user.senha)
 
         if (!isPasswordValid)
-            return next(new handlerError('Senha inválida', 401, { senha: 'Senha inválida' }))
+            return res.status(401).json({ message: 'Senha inválida', senha: 'Senha inválida' })
 
         const token = jwt.sign({ id: user.id, nome: user.nome, email: user.email }, process.env.JWT_SECRET, {
             expiresIn: '1d'
         })
 
-        res.status(200).json({ acces_token: token })
+        res.status(200).json({ access_token: token })
     } catch (error) {
         next(new handlerError('Usuário não encontrado', 500, error.message))
     }
@@ -38,6 +33,7 @@ const login = async (req, res, next) => {
 
 const signUp = async (req, res, next) => {
     try {
+        const { nome, email, senha } = req.body
         const allowedFields = ['nome', 'email', 'senha']
         const receivedFields = Object.keys(req.body)
 
@@ -46,7 +42,7 @@ const signUp = async (req, res, next) => {
         if ( extraFields.length > 0)
             return res.status(400).json({message: `Campos extras não permitidos: ${extraFields.join(', ')}`})
 
-        if (!nome || typeof nome !== string || nome.trim() === '')
+        if (!nome || typeof nome !== 'string' || nome.trim() === '')
             return res.status(400).json({ message: 'O nome é obrigatório e não deve ser uma string vazia' })
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -59,13 +55,11 @@ const signUp = async (req, res, next) => {
 
         const user = await usuariosRepository.findByEmail(email)
 
-        if (user) {
-            return next(new handlerError('Usuário já existe'), 400, {
-                email: 'Usuário já existe'
-            })
-        }
+        if (user) 
+            return res.status(400).json({ message: 'Usuário já existe', email: 'Usuário já existe' })
 
-        const salt = await bcrypt.genSalt(parseInt(process.env.SALT_ROUNDS))
+        const saltRounds = parseInt(process.env.SALT_ROUNDS) || 10
+        const salt = await bcrypt.genSalt(saltRounds)
         const hashSenha = await bcrypt.hash(senha, salt)
 
         const novoUsuario = await usuariosRepository.insertUser({
@@ -83,7 +77,28 @@ const signUp = async (req, res, next) => {
     }
 }
 
+const revokedTokens = [];
+
+const logout = (req, res) => {
+    try{
+        const token = req.headers['authorization']?.split(' ')[1];
+
+        if (!token)
+            return res.status(400).json({ message: 'Token não fornecido' });
+
+        revokedTokens.push(token);
+
+        res.status(200).json({ message: 'Logout realizado com sucesso' });
+
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        res.status(500).json({ message: 'Erro ao fazer logout', error: error.message });
+    }
+}
+
 module.exports = {
     login,
-    signUp
+    signUp,
+    logout,
+    revokedTokens
 }

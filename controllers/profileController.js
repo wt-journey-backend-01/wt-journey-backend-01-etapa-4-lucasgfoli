@@ -1,9 +1,9 @@
 const handleError = require('../utils/errorHandler')
+const usuariosRepository = require('../repositories/usuariosRepository')
 
 const getProfile = async (req, res, next) => {
     try{
-
-        const user = req.user
+        const user = await usuariosRepository.findUserById(req.user.id)
         
         if( !user ){
             return next(new handleError('user not found', 404, {

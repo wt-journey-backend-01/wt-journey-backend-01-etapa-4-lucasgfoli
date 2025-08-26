@@ -7,6 +7,7 @@ const authMiddleware = require('./middlewares/authMiddleware.js')
 const agentesRoutes = require('./routes/agentesRoutes.js')
 const casosRoutes = require('./routes/casosRoutes.js')
 const authRoutes = require('./routes/authRoutes.js')
+const profileRoutes = require('./routes/profileRoutes.js')
 const swaggerUi = require('swagger-ui-express')
 const swaggerSpec = require('./docs/swagger.js')
 const profileRoutes = require('./routes/profileRoutes.js')
@@ -26,7 +27,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api/auth', authRoutes)
 app.use('/api/profile', profileRoutes)
 
-// app.use('') Criar a rota de perfil do usuario
 
 app.listen(PORT, '0.0.0.0', ()=> {
     console.log(`🚀Servidor rodando na porta ${PORT}`)
