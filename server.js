@@ -10,7 +10,6 @@ const authRoutes = require('./routes/authRoutes.js')
 const profileRoutes = require('./routes/profileRoutes.js')
 const swaggerUi = require('swagger-ui-express')
 const swaggerSpec = require('./docs/swagger.js')
-const profileRoutes = require('./routes/profileRoutes.js')
 
 // Middleware de login
 app.use(((req, res, next) => {
