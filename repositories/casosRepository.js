@@ -32,6 +32,23 @@ async function deleteById(id) {
   return true
 }
 
+async function findFiltered({ status, agente_id, search, orderBy, order }) {
+  const query = knex('casos')
+
+  if (status) query.where('status', status)
+  if (agente_id) query.where('agente_id', agente_id)
+  if (search) {
+    query.where(function() {
+      this.where('titulo', 'ilike', `%${search}%`).orWhere('descricao', 'ilike', `%${search}%`)
+    })
+  }
+  if (orderBy && ['titulo', 'status', 'agente_id'].includes(orderBy)) {
+    query.orderBy(orderBy, order === 'desc' ? 'desc' : 'asc')
+  }
+
+  return await query.select('*')
+}
+
 module.exports = {
   findAll,
   findById,
@@ -39,4 +56,5 @@ module.exports = {
   update,
   patchById,
   deleteById,
+  findFiltered
 }

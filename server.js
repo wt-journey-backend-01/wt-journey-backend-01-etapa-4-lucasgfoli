@@ -23,8 +23,8 @@ app.use(express.json())
 app.use('/agentes', authMiddleware, agentesRoutes)
 app.use('/casos', authMiddleware, casosRoutes)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-app.use('/api/auth', authRoutes)
-app.use('/api/profile', profileRoutes)
+app.use('/api/auth', authMiddleware, authRoutes)
+app.use('/api/profile', authMiddleware, profileRoutes)
 
 
 app.listen(PORT, '0.0.0.0', ()=> {

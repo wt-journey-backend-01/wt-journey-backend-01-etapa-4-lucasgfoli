@@ -23,7 +23,7 @@ const login = async (req, res, next) => {
             expiresIn: '1d'
         })
 
-        res.status(200).json({ access_token: token })
+        res.status(200).json({ acess_token: token })
     } catch (error) {
         next(new handlerError('Usuário não encontrado', 500, error.message))
     }
@@ -36,8 +36,11 @@ const signUp = async (req, res, next) => {
         const { nome, email, senha } = req.body
         const allowedFields = ['nome', 'email', 'senha']
         const receivedFields = Object.keys(req.body)
-
         const extraFields = receivedFields.filter(field => !allowedFields.includes(field))
+        const missingFields = allowedFields.filter(field => !receivedFields.includes(field))
+
+        if ( missingFields.length > 0)
+            return res.status(400).json({message: `Campos obrigatórios ausentes: ${missingFields.join(', ')}`})
 
         if ( extraFields.length > 0)
             return res.status(400).json({message: `Campos extras não permitidos: ${extraFields.join(', ')}`})
