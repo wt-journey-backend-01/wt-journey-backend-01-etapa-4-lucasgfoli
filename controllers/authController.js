@@ -12,12 +12,12 @@ const login = async (req, res, next) => {
         const user = await usuariosRepository.findByEmail(email)
 
         if (!user) 
-            return res.status(404).json({ message: 'Usuário não encontrado', email: 'Usuário não encontrado' })
+            return res.status(404).json({ errors: { email: 'Usuário não encontrado' } })
 
         const isPasswordValid = await bcrypt.compare(senha, user.senha)
 
         if (!isPasswordValid)
-            return res.status(401).json({ message: 'Senha inválida', senha: 'Senha inválida' })
+            res.status(401).json({ errors: { senha: 'Senha inválida' } })
 
         const token = jwt.sign({ id: user.id, nome: user.nome, email: user.email }, process.env.JWT_SECRET, {
             expiresIn: '1d'
@@ -46,20 +46,20 @@ const signUp = async (req, res, next) => {
             return res.status(400).json({message: `Campos extras não permitidos: ${extraFields.join(', ')}`})
 
         if (!nome || typeof nome !== 'string' || nome.trim() === '')
-            return res.status(400).json({ message: 'O nome é obrigatório e não deve ser uma string vazia' })
+            return res.status(400).json({ errors: {nome: 'O nome é obrigatório e não deve ser uma string vazia'} })
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
         if (!email || !emailRegex.test(email))
-            return res.status(400).json({ message: 'Email inválido ou ausente' })
+            return res.status(400).json({ errors: {email: 'Email inválido ou ausente'} })
 
         if (!senha || !validarSenha(senha))
-            return res.status(400).json({ message: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.' })
+            return res.status(400).json({ errors: {senha: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.'} })
 
         const user = await usuariosRepository.findByEmail(email)
 
         if (user) 
-            return res.status(400).json({ message: 'Usuário já existe', email: 'Usuário já existe' })
+            return res.status(400).json({ errors: {email: 'Usuário já existe'} })
 
         const saltRounds = parseInt(process.env.SALT_ROUNDS) || 10
         const salt = await bcrypt.genSalt(saltRounds)
@@ -87,7 +87,7 @@ const logout = (req, res) => {
         const token = req.headers['authorization']?.split(' ')[1];
 
         if (!token)
-            return res.status(400).json({ message: 'Token não fornecido' });
+            return res.status(400).json({ errors: {token: 'Token não fornecido'} });
 
         revokedTokens.push(token);
 
@@ -99,9 +99,27 @@ const logout = (req, res) => {
     }
 }
 
+const getMe = async (req, res, next) => {
+    try {
+        const userId = req.user.id
+        const user = await usuariosRepository.findById(userId)
+
+        if( !user )
+            return res.status(404).json({ error: {user: 'Usuário não encontrado'} })
+
+        const { senha, ...userWithoutSenha } = user
+
+        res.status(200).json(userWithoutSenha)
+    }
+    catch (error) {
+        next(new handlerError('Erro ao buscar usuário', 500, error.message))
+    }
+}
+
 module.exports = {
     login,
     signUp,
     logout,
-    revokedTokens
+    revokedTokens,
+    getMe
 }
