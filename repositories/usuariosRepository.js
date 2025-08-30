@@ -10,7 +10,8 @@ async function findByEmail(email) {
 
 async function insertUser(usuario) {
     const [inserted] = await knex('usuarios').insert(usuario).returning('id')
-    return findUserById(inserted.id) 
+    const id = typeof inserted === 'object' ? inserted.id : inserted
+    return findUserById(id)
 }
 
 async function update(id, usuario) {
