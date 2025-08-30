@@ -21,8 +21,8 @@
  *       - in: query
  *         name: agente_id
  *         schema:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *         description: Filtrar casos por agente
  *       - in: query
  *         name: search
@@ -80,8 +80,8 @@
  *         name: id
  *         required: true
  *         schema:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *         description: ID do caso
  *     responses:
  *       200:
@@ -101,8 +101,8 @@
  *         name: id
  *         required: true
  *         schema:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *         description: ID do caso
  *     requestBody:
  *       required: true
@@ -128,8 +128,8 @@
  *         name: id
  *         required: true
  *         schema:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *         description: ID do caso
  *     requestBody:
  *       required: true
@@ -146,8 +146,8 @@
  *                 type: string
  *                 enum: [aberto, solucionado]
  *               agente_id:
- *                 type: string
- *                 format: uuid
+ *                 type: integer
+ *                 format: int64
  *     responses:
  *       200:
  *         description: Caso atualizado parcialmente
@@ -168,8 +168,8 @@
  *         name: id
  *         required: true
  *         schema:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *         description: ID do caso
  *     responses:
  *       204:
@@ -192,8 +192,8 @@
  *         - agente_id
  *       properties:
  *         id:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *         titulo:
  *           type: string
  *         descricao:
@@ -202,14 +202,14 @@
  *           type: string
  *           enum: [aberto, solucionado]
  *         agente_id:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *       example:
- *         id: "123e4567-e89b-12d3-a456-426614174000"
+ *         id: 1
  *         titulo: "Investigação de roubo"
  *         descricao: "Relato de roubo em estabelecimento comercial"
  *         status: "aberto"
- *         agente_id: "987e6543-e21b-12d3-a456-426614174999"
+ *         agente_id: 42
  * 
  *     CasoInput:
  *       type: object
@@ -227,13 +227,13 @@
  *           type: string
  *           enum: [aberto, solucionado]
  *         agente_id:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *       example:
  *         titulo: "Investigação de roubo"
  *         descricao: "Relato de roubo em estabelecimento comercial"
  *         status: "aberto"
- *         agente_id: "987e6543-e21b-12d3-a456-426614174999"
+ *         agente_id: 42
  */
 
 const express = require('express')

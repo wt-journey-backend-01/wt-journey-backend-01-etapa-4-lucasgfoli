@@ -39,11 +39,7 @@
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Agente'
- */
-
-/**
- * @swagger
- * /agentes:
+ * 
  *   post:
  *     summary: Cadastra um novo agente
  *     tags: [Agentes]
@@ -61,6 +57,7 @@
  *             schema:
  *               $ref: '#/components/schemas/Agente'
  */
+
 /**
  * @swagger
  * /agentes/{id}:
@@ -71,7 +68,8 @@
  *       - in: path
  *         name: id
  *         schema:
- *           type: string
+ *           type: integer
+ *           format: int64
  *         required: true
  *         description: ID do agente
  *     responses:
@@ -91,7 +89,8 @@
  *       - in: path
  *         name: id
  *         schema:
- *           type: string
+ *           type: integer
+ *           format: int64
  *         required: true
  *         description: ID do agente
  *     requestBody:
@@ -117,7 +116,8 @@
  *       - in: path
  *         name: id
  *         schema:
- *           type: string
+ *           type: integer
+ *           format: int64
  *         required: true
  *         description: ID do agente
  *     requestBody:
@@ -153,7 +153,8 @@
  *       - in: path
  *         name: id
  *         schema:
- *           type: string
+ *           type: integer
+ *           format: int64
  *         required: true
  *         description: ID do agente
  *     responses:
@@ -176,8 +177,8 @@
  *         - cargo
  *       properties:
  *         id:
- *           type: string
- *           format: uuid
+ *           type: integer
+ *           format: int64
  *           description: ID do agente
  *         nome:
  *           type: string
@@ -190,7 +191,7 @@
  *           type: string
  *           description: Cargo do agente
  *       example:
- *         id: "123e4567-e89b-12d3-a456-426614174000"
+ *         id: 101
  *         nome: "Maria Silva"
  *         dataDeIncorporacao: "2019-05-15"
  *         cargo: "Investigador"
@@ -212,7 +213,7 @@
  *       example:
  *         nome: "Maria Silva"
  *         dataDeIncorporacao: "2019-05-15"
- *         cargo: "Investigador" 
+ *         cargo: "Investigador"
  */
 
 const express = require('express')

@@ -1,4 +1,4 @@
-async function validarSenha(senha) {
+function validarSenha(senha) {
     if (senha.length < 8)
         return false
 

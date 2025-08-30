@@ -1,12 +1,12 @@
-const knex = require('../db/db')
+    const knex = require('../db/db')
 
 async function findByEmail(email) {
     return await knex('usuarios').where({ email }).first()
 }
 
-async function findUserById(id) {
-    return await knex('usuarios').where({ id }).first()
-}
+    async function findUserById(id) {
+        return await knex('usuarios').where({ id }).first()
+    }
 
 async function insertUser(usuario) {
     const [inserted] = await knex('usuarios').insert(usuario).returning('id')
