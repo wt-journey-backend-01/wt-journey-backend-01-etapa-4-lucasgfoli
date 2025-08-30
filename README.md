@@ -94,7 +94,7 @@ No arquivo **INSTRUCTIONS.md**, incluir:
   ```
     {
 
-        acess_token: "token aqui"
+        access_token: "token aqui"
 
     }
   ```
