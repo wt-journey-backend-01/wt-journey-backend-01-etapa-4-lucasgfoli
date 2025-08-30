@@ -9,8 +9,7 @@ const casosRoutes = require('./routes/casosRoutes.js')
 const authRoutes = require('./routes/authRoutes.js')
 const userRoutes = require('./routes/userRoutes.js')
 const swaggerUi = require('swagger-ui-express')
-const swaggerSpec = require('./docs/swagger.js')
-const profileRoutes = require('./routes/profileRoutes.js')
+const swaggerSpec = require('./docs/swagger.js')    
 
 // Middleware de login
 app.use(((req, res, next) => {
@@ -24,8 +23,8 @@ app.use(express.json())
 app.use('/agentes', authMiddleware, agentesRoutes)
 app.use('/casos', authMiddleware, casosRoutes)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-app.use('api/auth', authRoutes)
-app.use('/api/profile', profileRoutes)
+app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
 
 // app.use('') Criar a rota de perfil do usuario
 
