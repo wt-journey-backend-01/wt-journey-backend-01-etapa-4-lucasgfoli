@@ -1,37 +1,48 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 9 créditos restantes para usar o sistema de feedback AI.
+Você tem 8 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para lucasgfoli:
 
 Nota final: **27.5/100**
 
-Olá, lucasgfoli! 🚀 Antes de mais nada, parabéns pelo esforço em construir uma API REST completa, segura e documentada! É um desafio grande, e você já avançou bastante, especialmente porque muitos testes importantes passaram, como a criação e login de usuários, proteção das rotas com JWT e manipulação correta dos agentes e casos. 🎉
-
-Também quero destacar que você implementou corretamente o logout e a exclusão de usuários, além de garantir que as rotas de agentes e casos estão protegidas pelo middleware de autenticação. Isso é fundamental para a segurança da aplicação! Além disso, o uso do Knex para consultas e a organização do código em controllers, repositories e middlewares estão muito bem estruturados.
+Olá, lucasgfoli! 🎉 Primeiro, parabéns pelo esforço e pela entrega do projeto! Você já implementou várias funcionalidades importantes, como autenticação com JWT, hash de senha com bcrypt, proteção de rotas com middleware, e a estrutura geral está bem organizada. Também é ótimo ver que os testes básicos de criação, login, logout e exclusão de usuário passaram, assim como a proteção das rotas de agentes e casos. Isso mostra que você entendeu bem os conceitos fundamentais de autenticação e segurança em APIs REST. 👏
 
 ---
 
-### 🚩 Agora vamos analisar juntos os pontos que precisam de atenção para destravar sua nota e fazer sua aplicação brilhar ainda mais! 💡
+### 🚀 Pontos Bônus que você conquistou:
+
+- Implementação correta do logout com blacklist de tokens (`revokedTokens`).
+- Proteção das rotas `/agentes` e `/casos` com middleware JWT.
+- Uso consistente do Knex para queries.
+- Validação de senha com regex no `authController`.
+- Documentação inicial no `INSTRUCTIONS.md` explicando o fluxo de autenticação.
+- Uso do dotenv para variáveis de ambiente, incluindo `JWT_SECRET` e `SALT_ROUNDS`.
 
 ---
 
-## 1. Problemas nos testes de validação do cadastro de usuários (erros 400)
+### ⚠️ Agora, vamos analisar os testes que falharam e entender o que está acontecendo para que você possa corrigir e melhorar seu projeto, ok?
 
-Os testes que falharam indicam que o sistema não está validando corretamente os dados enviados no endpoint de registro (`POST /auth/register`). Vamos entender o que está acontecendo.
+---
 
-### O que os testes esperam?
+# Análise dos testes que falharam e causas raiz
 
-- Retornar erro 400 se o nome for vazio ou nulo
-- Retornar erro 400 se o email for vazio, nulo ou formato inválido
-- Retornar erro 400 se a senha for inválida (curta demais, sem números, sem caracteres especiais, sem letras maiúsculas/minúsculas)
-- Retornar erro 400 se algum campo extra for enviado
-- Retornar erro 400 se algum campo obrigatório estiver faltando
-- Retornar erro 400 se o email já estiver em uso
+### 1. Falhas em validação no cadastro de usuários (muitos erros 400)
 
-### O que seu código faz?
+Testes que falharam:
 
-No seu `authController.js`, você tem uma validação inicial que checa campos faltantes e extras:
+- Usuário com nome vazio/nulo
+- Usuário com email vazio/nulo
+- Usuário com senha inválida (curta, sem números, sem caractere especial, sem maiúscula, etc)
+- Usuário com campo extra no payload
+- Usuário com campo faltante
+- Usuário com email já em uso
+
+---
+
+**Por que isso está acontecendo?**
+
+No seu `authController.js`, você fez uma validação bem detalhada, mas a ordem e a lógica podem estar causando problemas:
 
 ```js
 const allowedFields = ['nome', 'email', 'senha']
@@ -39,45 +50,6 @@ const receivedFields = Object.keys(req.body)
 const extraFields = receivedFields.filter(field => !allowedFields.includes(field))
 const missingFields = allowedFields.filter(field => !receivedFields.includes(field))
 
-if (missingFields.length > 0)
-    return res.status(400).json({ message: `Campos obrigatórios ausentes: ${missingFields.join(', ')}` })
-
-if (extraFields.length > 0)
-    return res.status(400).json({ message: `Campos extras não permitidos: ${extraFields.join(', ')}` })
-```
-
-Além disso, você valida nome, email e senha separadamente, com mensagens específicas.
-
-### Por que os testes estão falhando?
-
-O problema principal está na forma como você está validando o nome e o email quando eles são vazios ou nulos. Por exemplo, você verifica:
-
-```js
-if (!nome || typeof nome !== 'string' || nome.trim() === '')
-    return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } })
-```
-
-Até aqui, parece correto. Mas os testes falhando indicam que talvez o campo `nome` não esteja chegando como esperado, ou que a validação não está cobrindo todos os casos.
-
-Outro ponto que pode estar causando falha é o formato da resposta JSON. Os testes esperam erro 400 com mensagens específicas, e seu código às vezes retorna `{ message: ... }` e outras vezes `{ errors: { campo: mensagem } }`. Essa inconsistência pode causar falha nos testes.
-
-Por exemplo, para campos faltantes e extras, você retorna:
-
-```js
-return res.status(400).json({ message: `Campos obrigatórios ausentes: ${missingFields.join(', ')}` })
-```
-
-Mas para erros de validação específicos, você retorna:
-
-```js
-return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } })
-```
-
-**Sugestão:** Padronize o formato da resposta de erros para usar sempre `{ errors: { campo: mensagem } }`. Isso deixa o API mais consistente e atende melhor os testes.
-
-### Exemplo de ajuste para padronizar erros:
-
-```js
 if (!nome || typeof nome !== 'string' || nome.trim() === '') {
     return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } })
 }
@@ -99,112 +71,98 @@ if (extraFields.length > 0) {
 }
 ```
 
-Além disso, verifique se o middleware `express.json()` está ativo antes das rotas para garantir que o corpo da requisição seja parseado corretamente. No seu `server.js`, está correto:
+- Você valida o `nome` antes de validar os campos faltantes. Isso pode fazer com que o teste que envia um nome nulo ou vazio seja interpretado de forma incorreta.
+- A validação de campos faltantes ocorre **depois** da validação de `nome`, mas idealmente deveria ser a primeira, para garantir que todos os campos obrigatórios estejam presentes antes de validar seus valores.
+- A validação de campos extras também vem depois, mas o teste espera que o erro de campo extra seja retornado corretamente.
+- Além disso, a validação do `nome` está misturada com a validação de campos faltantes, o que pode causar confusão.
+
+---
+
+**Como melhorar?**
+
+Sugiro reorganizar a validação para seguir esta ordem:
+
+1. Verificar se todos os campos obrigatórios estão presentes (missingFields).
+2. Verificar se existem campos extras (extraFields).
+3. Validar o conteúdo de cada campo (nome, email, senha).
+
+Exemplo de reestruturação:
 
 ```js
-app.use(express.json())
-```
+const allowedFields = ['nome', 'email', 'senha']
+const receivedFields = Object.keys(req.body)
+const missingFields = allowedFields.filter(field => !receivedFields.includes(field))
+const extraFields = receivedFields.filter(field => !allowedFields.includes(field))
 
-### Sobre a validação da senha
-
-Sua função `validarSenha` está ótima:
-
-```js
-function validarSenha(senha) {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
-    return regex.test(senha)
+if (missingFields.length > 0) {
+    const errors = {}
+    missingFields.forEach(field => {
+        errors[field] = `${field} é obrigatório`
+    })
+    return res.status(400).json({ errors })
 }
-```
 
-Mas os testes falham para senhas que não cumprem os requisitos. Isso indica que, talvez, você não esteja sempre retornando erro 400 com a mensagem correta para todos os casos de senha inválida.
+if (extraFields.length > 0) {
+    const errors = {}
+    extraFields.forEach(field => {
+        errors[field] = `${field} não é permitido`
+    })
+    return res.status(400).json({ errors })
+}
 
-**Dica:** Garanta que toda senha que não passar na validação retorne:
+if (!nome || typeof nome !== 'string' || nome.trim() === '') {
+    return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } })
+}
 
-```js
-return res.status(400).json({ errors: { senha: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.' } })
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+if (!email || typeof email !== 'string' || !emailRegex.test(email))
+    return res.status(400).json({ errors: { email: 'Email inválido ou ausente' } })
+
+if (!senha || !validarSenha(senha))
+    return res.status(400).json({ errors: { senha: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.' } })
 ```
 
 ---
 
-## 2. Inconsistência no nome do campo do token JWT na resposta do login
+### 2. Retorno do token JWT no login com chave errada no JSON
 
-No arquivo `authController.js`, no método `login`, você retorna o token assim:
-
-```js
-res.status(200).json({ acess_token: token })
-```
-
-Porém, no arquivo `INSTRUCTIONS.md`, o exemplo mostra o campo como `access_token` (com dois "c"):
-
-```json
-{
-  "access_token": "<token JWT aqui>"
-}
-```
-
-Essa diferença pode estar fazendo o teste falhar, porque o teste espera exatamente `access_token` e não `acess_token`.
-
-### Correção:
-
-No seu controller, altere para:
+No seu `authController.js`, no método `login`, você envia o token assim:
 
 ```js
 res.status(200).json({ access_token: token })
 ```
 
----
+Mas no seu `INSTRUCTIONS.md`, o exemplo do retorno do login é:
 
-## 3. Estrutura de Diretórios e Arquivos
-
-A estrutura do seu projeto está muito próxima do esperado, mas notei que seu arquivo `usuariosRepository.js` está com indentação estranha e algumas funções estão com espaçamento diferente. Isso não causa erro funcional, mas vale manter o padrão para facilitar manutenção.
-
-Também vi que você tem um arquivo `userRoutes.js` e `userController.js` (pela estrutura listada), mas no seu `server.js` você importa `userRoutes` e usa:
-
-```js
-app.use('/api/users', userRoutes)
-```
-
-Porém, no enunciado, essa rota não está mencionada como obrigatória. O correto seria criar a rota `/usuarios/me` para retornar dados do usuário autenticado (bônus). Se você implementou, ótimo! Se não, recomendo criar essa rota para ganhar pontos extras.
-
-Além disso, no seu `server.js` tem um comentário:
-
-```js
-// app.use('') Criar a rota de perfil do usuario
-```
-
-Sugiro implementar essa rota, usando o middleware de autenticação para garantir que só o usuário logado acesse seus dados.
-
----
-
-## 4. Middleware de Autenticação e Tokens Revogados
-
-Seu middleware `authMiddleware.js` usa uma variável `revokedTokens` importada do `authController`:
-
-```js
-const { revokedTokens } = require('../controllers/authController')
-```
-
-Mas no código do `authController.js` que você enviou, não existe essa variável `revokedTokens` declarada ou exportada.
-
-Isso pode causar erro em tempo de execução quando o middleware tentar acessar essa variável.
-
-### Sugestão:
-
-- Declare `revokedTokens` como um array no `authController.js`:
-
-```js
-const revokedTokens = []
-module.exports = {
-    login,
-    signUp,
-    logout,
-    revokedTokens
+```json
+{
+  "acess_token": "<token JWT aqui>"
 }
 ```
 
-- No método `logout`, adicione o token atual à lista para invalidá-lo:
+Note que o teste espera a chave `"acess_token"` (sem o segundo "c") e você está enviando `"access_token"` (com dois "c").
+
+Isso causa falha no teste que verifica o formato do token retornado.
+
+---
+
+**Como corrigir?**
+
+Alinhe o nome da chave para `"acess_token"` para que o teste passe:
 
 ```js
+res.status(200).json({ acess_token: token })
+```
+
+---
+
+### 3. Problemas no array `revokedTokens` usado para logout
+
+Você está usando um array simples `revokedTokens` para armazenar tokens inválidos:
+
+```js
+const revokedTokens = []
+
 const logout = (req, res) => {
     const authHeader = req.headers.authorization
     if (authHeader) {
@@ -215,65 +173,74 @@ const logout = (req, res) => {
 }
 ```
 
-Isso garante que tokens inválidos sejam rejeitados pelo middleware.
+Embora funcione para o escopo de um processo em execução, isso não é persistente e pode causar problemas se o servidor reiniciar. Além disso, você não está validando se o token já foi revogado antes, o que pode gerar inconsistências.
 
 ---
 
-## 5. Documentação (INSTRUCTIONS.md)
+**Sugestão:**
 
-Notei que no seu arquivo `INSTRUCTIONS.md`, o exemplo de retorno do login está com o campo `acess_token` (sem o segundo "c"):
-
-```json
-{
-  "acess_token": "<token JWT aqui>"
-}
-```
-
-Como expliquei antes, isso deve ser corrigido para `access_token` para ficar consistente com o padrão e os testes.
-
-Além disso, o arquivo poderia ser enriquecido com exemplos de uso do token no header `Authorization` e o fluxo de autenticação esperado, para facilitar o uso da API.
+- Para projetos pequenos e testes, o array pode ser suficiente, mas para produção, o ideal é usar uma blacklist persistente (ex: Redis).
+- Também garanta que o middleware verifique corretamente se o token está revogado (você já faz isso).
+- Se quiser mais segurança, considere implementar refresh tokens e expiração automática.
 
 ---
 
-## 6. Outros pontos menores
+### 4. Falha na validação dos campos extras e faltantes no cadastro
 
-- No seu `knexfile.js`, está tudo correto, mas certifique-se de que as variáveis de ambiente `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_DB` estejam definidas no `.env` e no `docker-compose.yml`.
-
-- Você tem duas dependências para bcrypt: `"bcrypt"` e `"bcryptjs"`. Isso não é necessário; escolha uma (recomendo `bcryptjs` para facilidade de instalação) e remova a outra para evitar conflitos.
-
-- No seu `authController.js`, o uso de `bcryptjs` está correto, mas garanta que o número de salt rounds (`SALT_ROUNDS`) esteja definido no `.env`, ou use um valor padrão, como você fez.
+No seu `signUp`, você verifica campos extras e faltantes, mas o teste espera que o erro retorne um objeto `errors` com as chaves correspondentes a cada campo inválido. Certifique-se que seu JSON de erro está exatamente nesse formato, para que o teste reconheça.
 
 ---
 
-## 📚 Recursos que recomendo para você:
+### 5. Estrutura de diretórios e arquivos
 
-- Para entender melhor autenticação e JWT, veja este vídeo, feito pelos meus criadores, que explica muito bem os conceitos básicos e fundamentais da cibersegurança: https://www.youtube.com/watch?v=Q4LQOfYwujk
+Sua estrutura está praticamente correta e segue o esperado, parabéns! 👏
 
-- Para entender o uso prático de JWT, recomendo este vídeo: https://www.youtube.com/watch?v=keS0JWOypIU
-
-- Para aprofundar no uso de bcrypt e segurança de senhas: https://www.youtube.com/watch?v=L04Ln97AwoY
-
-- Para garantir que sua estrutura de projeto esteja organizada e escalável, veja este vídeo sobre arquitetura MVC em Node.js: https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s
+Só uma observação: você tem um arquivo `userRoutes.js` e uma pasta `controllers/userController.js`, que não estavam especificados no enunciado. Isso não é um erro, mas atenção para manter o padrão dos nomes no plural e consistência.
 
 ---
 
-## 🎯 Resumo rápido dos pontos para focar:
+### 6. Outras observações
 
-- Padronize as respostas de erro no endpoint de cadastro para sempre usar `{ errors: { campo: mensagem } }`.
-- Corrija o nome do campo do token JWT retornado no login para `access_token`.
-- Implemente a variável `revokedTokens` no `authController.js` e a lógica para invalidar tokens no logout.
-- Revise e implemente a rota `/usuarios/me` para retornar dados do usuário autenticado (bônus importante).
-- Remova dependências duplicadas do bcrypt para evitar conflitos.
-- Verifique se o `.env` está configurado corretamente com as variáveis necessárias para JWT e banco.
-- Ajuste o arquivo `INSTRUCTIONS.md` para refletir o nome correto do campo do token e exemplos claros de uso do token no header Authorization.
+- No seu `authController.js`, o método `login` retorna `404` quando o usuário não é encontrado. O enunciado pede para retornar `400` quando o email já está em uso na criação, mas no login o que você fez está correto (404 para usuário não encontrado).
+- No seu `INSTRUCTIONS.md`, o exemplo do token JWT tem a chave `"acess_token"`, mas no código está `"access_token"`. Alinhe para evitar confusão.
+- Sua validação da senha está excelente com regex, parabéns! 🎯
+- Seu middleware de autenticação está muito bom, tratando token mal formatado, token inválido e token expirado.
 
 ---
 
-Você está no caminho certo, lucasgfoli! Com esses ajustes, sua API vai ficar muito mais robusta, segura e alinhada com as expectativas do desafio. Continue assim, estudando e aprimorando! 💪✨
+### 📚 Recursos recomendados para você:
 
-Se precisar, volte aqui para tirar dúvidas e vamos juntos até o sucesso total! 🚀
+- Para entender melhor a validação de campos e organização de erros:  
+  https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s (Arquitetura MVC e boas práticas)
 
-Um abraço de Code Buddy! 🤖❤️
+- Para aprofundar em autenticação JWT e bcrypt:  
+  https://www.youtube.com/watch?v=Q4LQOfYwujk (Conceitos básicos de cibersegurança)  
+  https://www.youtube.com/watch?v=keS0JWOypIU (JWT na prática)  
+  https://www.youtube.com/watch?v=L04Ln97AwoY (JWT e bcrypt juntos)
+
+- Para configurar corretamente o ambiente com Docker e Knex:  
+  https://www.youtube.com/watch?v=uEABDBQV-Ek&t=1s (Docker + PostgreSQL + Node.js)  
+  https://www.youtube.com/watch?v=dXWy_aGCW1E (Knex migrations)
+
+---
+
+# 📋 Resumo rápido dos principais pontos para focar:
+
+- **Reorganizar a validação no cadastro de usuários** para verificar campos faltantes e extras antes de validar valores individuais.
+- **Corrigir a chave do token JWT retornado no login** para `"acess_token"` conforme esperado.
+- Garantir que o JSON de erros esteja no formato correto com o objeto `errors` e chaves específicas para cada campo.
+- Rever o uso do array `revokedTokens` para logout, considerando persistência e segurança.
+- Manter consistência na nomenclatura dos arquivos e rotas (ex: `userRoutes.js` vs `usuariosRoutes.js`).
+- Conferir se o `.env` está corretamente configurado com `JWT_SECRET` e `SALT_ROUNDS`.
+- Continuar usando o middleware para proteger rotas e validar tokens.
+
+---
+
+lucasgfoli, seu projeto está no caminho certo e com ajustes na validação e no retorno do token, você vai destravar muitos testes! 🚀 Continue assim, revisando cada detalhe com calma. Segurança é um tema delicado, e você já está mostrando domínio sobre ele.
+
+Se precisar, volte nos vídeos que recomendei e tente aplicar as mudanças sugeridas. Estou aqui para te ajudar! 💪
+
+Boa codificação e até a próxima! 👋😊
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
