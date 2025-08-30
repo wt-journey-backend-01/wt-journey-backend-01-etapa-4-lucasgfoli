@@ -16,7 +16,7 @@ const login = async (req, res) => {
             return res.status(401).json({ errors: { senha: 'Senha inválida' } })
 
         const token = jwt.sign({ id: user.id, nome: user.nome, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' })
-        res.status(200).json({ acess_token: token })
+        res.status(200).json({ access_token: token })
     } catch (error) {
         return handleError(res, 500, error.message)
     }

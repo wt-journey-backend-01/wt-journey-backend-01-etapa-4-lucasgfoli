@@ -90,7 +90,7 @@ Certifique-se de que o arquivo `knexfile.js` está configurado corretamente para
 
 ```json
 {
-  "acess_token": "<token JWT aqui>"
+  "access_token": "<token JWT aqui>"
 }
 ```
 
