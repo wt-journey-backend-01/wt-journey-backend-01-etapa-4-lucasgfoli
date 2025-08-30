@@ -26,8 +26,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 
-// app.use('') Criar a rota de perfil do usuario
-
 app.listen(PORT, '0.0.0.0', ()=> {
     console.log(`🚀Servidor rodando na porta ${PORT}`)
 })
