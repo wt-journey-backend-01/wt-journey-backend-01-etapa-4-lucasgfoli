@@ -1,95 +1,66 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 6 créditos restantes para usar o sistema de feedback AI.
+Você tem 5 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para lucasgfoli:
 
 Nota final: **27.5/100**
 
-Olá, lucasgfoli! 🚀 Que legal ver você avançando nesse desafio complexo de API REST com Node.js, Express e PostgreSQL! Parabéns pelo empenho e pela organização do seu projeto, que já está bem estruturado e com várias funcionalidades importantes implementadas. 🎉
+Olá, lucasgfoli! 🚀 Primeiro, parabéns pelo esforço e pelo que você já conseguiu entregar! Você implementou a base da autenticação com JWT, hashing de senhas com bcrypt, proteção das rotas com middleware, e até o logout invalidando tokens. Isso não é trivial e já mostra um bom domínio dos conceitos fundamentais de segurança em APIs REST. 🎉
+
+Além disso, você conseguiu passar vários testes importantes, como a criação e login de usuários, logout, exclusão de usuários, e proteção das rotas de agentes e casos com JWT. Isso indica que a estrutura geral está no caminho certo!
 
 ---
 
-### 🎉 Pontos Fortes e Conquistas Bônus
+## Vamos analisar os pontos que precisam de atenção para você destravar mais funcionalidades e garantir uma API completa e segura. 👀
 
-- Sua API já está protegendo rotas sensíveis com middleware JWT, o que é essencial para segurança.
-- Você implementou o registro, login e logout com bcrypt e JWT, seguindo boas práticas.
-- A estrutura do projeto está muito próxima do esperado, com controllers, repositories, middlewares e rotas separadas.
-- Os testes de autenticação e proteção de rotas passaram, o que mostra que a base da segurança está funcionando.
-- Você implementou filtros e ordenações nos endpoints de casos e agentes, e já tem documentação Swagger para os endpoints principais.
-- Bônus: você já tem um endpoint `/api/usuarios/me` (vi no projeto) e a exclusão de usuários, que são funcionalidades extras que agregam muito.
+### 1. Estrutura de Diretórios
 
-Isso já é um baita avanço! 👏
+Você está muito próximo da estrutura esperada, mas percebi que tem um arquivo `userRoutes.js` e `userController.js` na sua estrutura (conforme `project_structure.txt` e `server.js`), que não faz parte da estrutura oficial para esta etapa. Além disso, a rota `/api/usuariosz` está sendo usada no `server.js`:
+
+```js
+app.use('/api/usuarios', userRoutes)
+app.use('/api/usuariosz', userRoutes)
+```
+
+Essa rota `/api/usuariosz` parece um erro de digitação e pode causar confusão.
+
+**Recomendação:**  
+- Remova a rota `/api/usuariosz` do `server.js`.  
+- Verifique se o arquivo `userRoutes.js` e `userController.js` são necessários. Se não estiverem previstos no desafio, retire-os para não causar conflitos.  
+- Mantenha a estrutura conforme o esperado, com as rotas `authRoutes.js`, `agentesRoutes.js`, `casosRoutes.js` e `usuariosRepository.js` para usuários.
+
+Manter a estrutura correta ajuda a evitar problemas de roteamento e facilita a manutenção.
 
 ---
 
-### 🚩 Testes que Falharam e Onde Precisamos Dar um Upgrade
+### 2. Testes que falharam: Validação no Registro de Usuário (muitos erros 400)
 
-Vamos analisar os testes que falharam, que são principalmente relacionados à criação de usuários e validação da senha, além de alguns testes de filtragem e detalhes das rotas extras.
+Os testes falharam principalmente nas validações do endpoint de registro de usuário (`POST /api/auth/register`), como:
 
----
+- Nome vazio ou nulo  
+- Email vazio, nulo ou inválido  
+- Senha inválida (curta, sem números, sem caracteres especiais, sem maiúsculas/minúsculas)  
+- Campos extras enviados  
+- Campos obrigatórios faltando  
+- Email já em uso  
 
-### 1. **Falhas nos testes de criação de usuário (registro):**
-
-- Testes que falharam:  
-  - Usuário com nome vazio ou nulo → erro 400 esperado  
-  - Usuário com email vazio, nulo ou inválido → erro 400 esperado  
-  - Senha inválida: curta, sem números, sem caractere especial, sem letras maiúsculas/minúsculas → erro 400 esperado  
-  - Campo extra enviado → erro 400 esperado  
-  - Campo obrigatório faltando → erro 400 esperado  
-  - Email já em uso → erro 400 esperado
-
-**Análise da causa raiz:**
-
-No seu `authController.js`, a função `signUp` tem uma validação robusta que verifica campos obrigatórios, campos extras, formato do email e senha. Isso é ótimo! Porém, o problema está no formato da resposta quando a validação falha.
-
-Por exemplo, você retorna erros assim:
-
-```js
-return res.status(400).json({ errors: { email: 'Usuário já existe' } })
-```
-
-Mas os testes do projeto esperam que o corpo de erro seja exatamente assim, com a chave `errors` contendo os campos e mensagens. Isso você fez corretamente.
-
-No entanto, o que pode estar causando falha é que você está permitindo que campos com valor `null` ou strings vazias passem na validação de campos obrigatórios? Vamos ver um trecho:
-
-```js
-if (!nome || typeof nome !== 'string' || nome.trim() === '') {
-    return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } })
-}
-```
-
-Esse trecho está correto e cobre nome vazio e nulo.
-
-Para email:
-
-```js
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-if (!email || typeof email !== 'string' || !emailRegex.test(email))
-    return res.status(400).json({ errors: { email: 'Email inválido ou ausente' } })
-```
-
-Também parece correto.
-
-Para senha:
-
-```js
-if (!senha || !validarSenha(senha))
-    return res.status(400).json({ errors: { senha: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.' } })
-```
-
-A função `validarSenha` usa regex que exige esses critérios.
-
-Então, aparentemente, a validação está correta.
-
-**Mas um ponto importante:**
-
-Você está validando se há campos extras com:
+Você tem um código de validação no `authController.js` que cobre muitos desses casos, mas vamos analisar o que pode estar causando as falhas:
 
 ```js
 const allowedFields = ['nome', 'email', 'senha']
 const receivedFields = Object.keys(req.body)
+const missingFields = allowedFields.filter(field => !receivedFields.includes(field))
 const extraFields = receivedFields.filter(field => !allowedFields.includes(field))
+
+if (missingFields.length > 0) {
+    const errors = {}
+    missingFields.forEach(field => {
+        errors[field] = `${field} é obrigatório`
+    })
+    return res.status(400).json({ errors })
+}
+
 if (extraFields.length > 0) {
     const errors = {}
     extraFields.forEach(field => {
@@ -97,15 +68,68 @@ if (extraFields.length > 0) {
     })
     return res.status(400).json({ errors })
 }
+
+if (!nome || typeof nome !== 'string' || nome.trim() === '') {
+    return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } })
+}
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+if (!email || typeof email !== 'string' || !emailRegex.test(email))
+    return res.status(400).json({ errors: { email: 'Email inválido ou ausente' } })
+
+if (!senha || !validarSenha(senha))
+    return res.status(400).json({ errors: { senha: 'Senha inválida. Deve conter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais.' } })
 ```
 
-Isso está ótimo!
+**Análise da causa raiz:**  
+- A validação do nome está correta, mas o teste pode estar enviando `null` ou valores que não são strings.  
+- O regex de email parece bom, mas verifique se o teste envia espaços ou outros caracteres especiais que o regex não aceita.  
+- A função `validarSenha` usa essa regex:
 
-**Onde pode estar o problema?**
+```js
+function validarSenha(senha) {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
+    return regex.test(senha)
+}
+```
 
-- Talvez o teste esteja enviando o campo `senha` como `null` e seu código está aceitando porque `!senha` em JS considera `null` como falso, e deve entrar na validação. Então isso deve funcionar.
+Ela está correta para o requisito de senha, mas se o teste envia senha nula ou vazia, o `!senha` já trata isso.  
+- A validação de campos extras e faltantes está correta.
 
-- Mas, olhando no `usuariosRepository.js`, o método `insertUser` está assim:
+**Possível motivo da falha:**  
+Apesar da validação parecer correta, os testes falharam porque você retorna os erros em um objeto com a propriedade `errors` com mensagens específicas, mas talvez o teste espere um formato diferente ou mensagens específicas. Além disso, o teste para "nome nulo" pode estar enviando `nome: null` e o seu código só verifica se `!nome` ou `nome.trim() === ''`. Como o `null` não tem método `trim()`, isso vai gerar erro na execução.
+
+**Como corrigir:**  
+Antes de usar `nome.trim()`, verifique se `nome` é uma string:
+
+```js
+if (!nome || typeof nome !== 'string' || nome.trim() === '') {
+    return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } })
+}
+```
+
+Se `nome` for `null`, o `typeof nome !== 'string'` vai ser true e cai no erro, ok. Então está certo.  
+Mas se o teste enviar `nome: ''` ou `nome: ' '` (apenas espaços), seu código já trata com o `trim()`. Isso está correto.
+
+**Outra possibilidade:**  
+Veja que no início você verifica campos extras e faltantes, mas não verifica se algum campo obrigatório está `null` explicitamente, apenas se está ausente no objeto. Talvez o teste envie `{ nome: null, email: '...', senha: '...' }`, o que passa na checagem de campos, mas o valor é inválido.
+
+Para garantir, você pode melhorar a validação para campos nulos:
+
+```js
+if (nome === null || nome === undefined || typeof nome !== 'string' || nome.trim() === '') {
+    return res.status(400).json({ errors: { nome: 'O nome é obrigatório e não pode ser vazio' } })
+}
+```
+
+Faça o mesmo para email e senha.
+
+---
+
+### 3. Problema no `usuariosRepository.js` na inserção de usuário
+
+Olhei seu `usuariosRepository.js` e encontrei um detalhe importante na função `insertUser`:
 
 ```js
 async function insertUser(usuario) {
@@ -114,13 +138,15 @@ async function insertUser(usuario) {
 }
 ```
 
-Aqui há um problema: `inserted` é o valor retornado pelo `.returning('id')`, que normalmente é um número ou objeto com a propriedade `id`. Você acessa `inserted.id`, mas se `inserted` for um número, `inserted.id` será `undefined`, e `findUserById(undefined)` vai falhar.
+Aqui, `inserted` pode ser:
 
-Isso pode estar causando erros silenciosos na criação do usuário.
+- Um número (id) direto, por exemplo `1`, se o banco retornar só o id.  
+- Ou um objeto `{ id: 1 }`, dependendo do cliente e versão do banco.
 
-**Solução:**
+Você tenta acessar `inserted.id`, mas se `inserted` for um número, vai dar erro.
 
-Altere para:
+**Como corrigir:**  
+Faça uma verificação para garantir que o id é obtido corretamente:
 
 ```js
 async function insertUser(usuario) {
@@ -130,32 +156,13 @@ async function insertUser(usuario) {
 }
 ```
 
-Assim você garante que o `id` é corretamente obtido.
+Esse ajuste evita erros na hora de buscar o usuário recém-criado.
 
 ---
 
-### 2. **Falha na exclusão de rota duplicada no server.js**
+### 4. Logout e lista de tokens revogados
 
-No seu `server.js`, você tem:
-
-```js
-app.use('/api/usuarios', userRoutes)
-app.use('/api/usuariosz', userRoutes)
-```
-
-A segunda rota `/api/usuariosz` parece um erro de digitação. Isso pode causar confusão em rotas e testes.
-
-**Recomendo remover a linha:**
-
-```js
-app.use('/api/usuariosz', userRoutes)
-```
-
----
-
-### 3. **Middleware de autenticação e logout**
-
-No seu `authController.js`, você tem um array `revokedTokens` para controlar tokens inválidos no logout:
+Você implementou o logout adicionando tokens a um array `revokedTokens` em memória:
 
 ```js
 const revokedTokens = []
@@ -170,167 +177,81 @@ const logout = (req, res) => {
 }
 ```
 
-E no middleware:
+Isso funciona, mas tem limitações:
+
+- Se o servidor reiniciar, a lista de tokens revogados será perdida.  
+- Pode causar problemas de escalabilidade em múltiplas instâncias.
+
+Para um projeto real, recomenda-se armazenar tokens revogados em banco ou cache (Redis).  
+Mas para o desafio, está ok.
+
+**Dica:** No middleware, você já verifica essa lista:
 
 ```js
 if (revokedTokens.includes(token))
     return res.status(401).json({ message: 'Token inválido' })
 ```
 
-Isso funciona para invalidar tokens, mas o array `revokedTokens` está apenas na memória da aplicação e será perdido se o servidor reiniciar. Para um sistema real, isso não é recomendado, mas para o desafio está ok.
+---
 
-**No entanto, note que o teste espera que o logout de um token já inválido retorne erro 400, mas seu logout sempre retorna 200, mesmo se o token estiver inválido.**
+### 5. Middleware de autenticação
 
-Seria interessante validar se o token já está revogado e, nesse caso, retornar 400.
+Seu middleware está bem feito, tratando os erros de token e adicionando o usuário autenticado em `req.user`. Isso é ótimo!
 
 ---
 
-### 4. **Testes de filtragem e busca nos casos e agentes**
+### 6. Testes bônus que falharam (filtragem, endpoint /usuarios/me)
 
-Você tem vários testes bônus que falharam relacionados a filtros e buscas, por exemplo:
+Você não implementou o endpoint `/usuarios/me` que retorna dados do usuário autenticado, nem a filtragem avançada para agentes e casos (como filtragem por data de incorporação, status, etc). Por isso, os testes bônus falharam.
 
-- Filtragem por status de caso  
-- Busca de agente responsável pelo caso  
-- Filtragem por data de incorporação com sorting
+Se quiser melhorar sua nota, recomendo implementar:
 
-No seu `casosController.js`, o método `getAllCasos` implementa filtragem manualmente em memória:
-
-```js
-let casos = await casosRepository.findAll();
-
-if (search) {
-    // filtro manual
-    casos = casos.filter(...)
-}
-...
-```
-
-Mas no `casosRepository.js` você tem um método `findFiltered` que já faz isso usando query Knex com `where` e `orderBy`.
-
-Você não está usando esse método no controller! Isso faz com que a filtragem não seja feita no banco, mas sim na aplicação, o que pode causar problemas de performance e erros em testes que esperam a filtragem correta.
-
-**Solução recomendada:**
-
-No controller, use `findFiltered` passando os parâmetros do query:
-
-```js
-const casos = await casosRepository.findFiltered({ status, agente_id, search, orderBy, order });
-```
-
-E aí faça apenas o enriquecimento dos casos com o agente, se necessário.
+- Endpoint `GET /api/usuarios/me` que retorna os dados do usuário logado usando `req.user`.  
+- Melhorar os endpoints de agentes e casos para suportar filtros e ordenações conforme o desafio pede.
 
 ---
 
-### 5. **Repositório de usuários: indentação e consistência**
+### 7. Pequenas dicas para melhorar seu código
 
-No seu `usuariosRepository.js`, a indentação está um pouco confusa no começo, não afeta a execução, mas para manter o padrão, organize assim:
-
-```js
-const knex = require('../db/db')
-
-async function findByEmail(email) {
-    return await knex('usuarios').where({ email }).first()
-}
-
-async function findUserById(id) {
-    return await knex('usuarios').where({ id }).first()
-}
-
-async function insertUser(usuario) {
-    const [inserted] = await knex('usuarios').insert(usuario).returning('id')
-    const id = typeof inserted === 'object' ? inserted.id : inserted
-    return findUserById(id)
-}
-
-// ... restante
-```
+- No `server.js`, evite rotas repetidas ou erradas (`/api/usuariosz`).  
+- No `authController.js`, padronize as mensagens de erro para facilitar testes automatizados.  
+- No `usuariosRepository.js`, cuide do retorno do knex para evitar erros ao acessar propriedades.  
+- Use variáveis de ambiente para `SALT_ROUNDS` e `JWT_SECRET` e garanta que elas estejam definidas no `.env`.  
+- No README ou INSTRUCTIONS.md, documente claramente o fluxo de autenticação e exemplos de uso do token.
 
 ---
 
-### 6. **Estrutura de diretórios e arquivos**
+## Recursos para você estudar e aprimorar ainda mais seu projeto:
 
-Sua estrutura está muito próxima do esperado, mas note que no `project_structure.txt` aparece o arquivo `userController.js` e `userRoutes.js` que não foram enviados para análise. Isso é ok se você implementou exclusão de usuários e `/usuarios/me` nesse controller/rota.
+- Para autenticação, JWT e bcrypt:  
+  https://www.youtube.com/watch?v=Q4LQOfYwujk (Esse vídeo, feito pelos meus criadores, fala muito bem sobre autenticação e segurança.)  
+  https://www.youtube.com/watch?v=keS0JWOypIU (JWT na prática)  
+  https://www.youtube.com/watch?v=L04Ln97AwoY (Uso combinado de JWT e bcrypt)
 
-Só fique atento para que o arquivo `authRoutes.js` esteja na pasta `routes/` e o `authController.js` em `controllers/`, assim como o middleware `authMiddleware.js` em `middlewares/`.
+- Para estruturação e boas práticas MVC:  
+  https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s
 
----
-
-### Recomendações de aprendizado para você aprofundar:
-
-- Para melhorar a parte de autenticação com JWT e bcrypt, recomendo fortemente este vídeo, feito pelos meus criadores, que fala muito bem sobre autenticação e segurança:  
-https://www.youtube.com/watch?v=Q4LQOfYwujk
-
-- Para entender melhor como usar JWT com Node.js e Express na prática, este vídeo é excelente:  
-https://www.youtube.com/watch?v=keS0JWOypIU
-
-- Para aprimorar o uso do Knex e fazer queries eficientes com filtros no banco, veja este guia detalhado do Knex Query Builder:  
-https://www.youtube.com/watch?v=GLwHSs7t3Ns&t=4s
-
-- Para organizar seu projeto com MVC e manter o código limpo e escalável:  
-https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s
+- Para Knex e banco de dados:  
+  https://www.youtube.com/watch?v=GLwHSs7t3Ns&t=4s (Query Builder)  
+  https://www.youtube.com/watch?v=dXWy_aGCW1E (Migrations)
 
 ---
 
-### Exemplos práticos para ajustes
+## Resumo rápido dos principais pontos para focar agora:
 
-**1. Corrigir `insertUser` no `usuariosRepository.js`:**
-
-```js
-async function insertUser(usuario) {
-    const [inserted] = await knex('usuarios').insert(usuario).returning('id')
-    const id = typeof inserted === 'object' ? inserted.id : inserted
-    return findUserById(id)
-}
-```
-
-**2. Usar filtragem no banco no `casosController.js`:**
-
-```js
-async function getAllCasos(req, res) {
-    try {
-        const { status, agente_id, search, orderBy, order } = req.query;
-
-        // Usa o método do repositório que faz query no banco
-        const casos = await casosRepository.findFiltered({ status, agente_id, search, orderBy, order });
-
-        // Enriquecer com dados do agente se quiser
-        const casosComAgente = await Promise.all(
-            casos.map(async caso => ({
-                ...caso,
-                agente: await agentesRepository.findById(caso.agente_id)
-            }))
-        );
-
-        res.status(200).json(casosComAgente);
-    } catch (error) {
-        handleError(res, 500, error.message)
-    }
-}
-```
+- Corrigir a função `insertUser` em `usuariosRepository.js` para tratar retorno do knex corretamente.  
+- Revisar validações no `authController.js` para garantir que campos nulos, vazios e inválidos sejam tratados sem erros (especialmente para nome, email e senha).  
+- Remover rota `/api/usuariosz` e arquivos/rotas não previstos para evitar conflitos.  
+- Implementar o endpoint `/api/usuarios/me` para retornar dados do usuário autenticado (bônus importante).  
+- Documentar claramente o uso do token JWT no `INSTRUCTIONS.md`.  
+- Testar com cuidado os fluxos de registro e login para garantir que mensagens de erro estejam no formato esperado pelos testes.  
+- Se possível, melhorar os filtros e ordenações nas rotas de agentes e casos para subir a nota nos bônus.
 
 ---
 
-### Resumo rápido dos principais pontos para focar:
+Você está no caminho certo, lucasgfoli! 👏 Com esses ajustes, sua API vai ficar muito mais robusta e alinhada com os requisitos do desafio. Continue firme que a prática leva à perfeição. Qualquer dúvida, pode chamar que eu te ajudo! 💪✨
 
-- Corrigir `insertUser` para acessar o `id` corretamente após insert no banco.  
-- Remover rota duplicada `/api/usuariosz` do `server.js`.  
-- No logout, validar se token já está revogado e retornar erro 400 se for o caso.  
-- No controller de casos, usar método `findFiltered` para fazer filtros no banco, não em memória.  
-- Ajustar indentação e organização dos arquivos para manter padrão.  
-- Revisar testes de validação dos campos no registro para garantir que erros são retornados conforme esperado.  
-- Continuar aprimorando a documentação e fluxos de autenticação no `INSTRUCTIONS.md`.
-
----
-
-Você está no caminho certo, lucasgfoli! 💪 Com essas correções e ajustes, sua API vai ficar muito mais robusta, segura e alinhada com as melhores práticas. Continue firme, aprendendo e testando bastante. Se precisar, volte aos vídeos recomendados para reforçar conceitos, principalmente sobre autenticação e uso do Knex.
-
-Qualquer dúvida, estou aqui para ajudar! 🚀✨
-
-Boa codificação! 👨‍💻👩‍💻
-
----
-
-Se quiser, posso te ajudar a montar os trechos corrigidos para facilitar a implementação! Quer?
+Boa codada e até a próxima! 🚀👨‍💻👩‍💻
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
