@@ -1,35 +1,34 @@
 const agentesRepository = require('../repositories/agentesRepository')
-const handlerError = require('../utils/errorHandler')
+const handleError = require('../utils/errorHandler')
 
 async function getAllAgentes(req, res) {
     try {
-    const agentes = await agentesRepository.findAll()
-    res.status(200).json(Array.isArray(agentes) ? agentes : [])
+        const agentes = await agentesRepository.findAll()
+
+        res.status(200).json(Array.isArray(agentes) ? agentes : [])
+
     } catch (error) {
-    handlerError(res, error)
+
+        return handleError(res, 500, error.message)
     }
 }
 
-async function getAgenteById(req, res) 
-{
+async function getAgenteById(req, res) {
     try {
         const { id } = req.params
-        if (!id || isNaN(Number(id))) 
-        {
+        if (!id || isNaN(Number(id))) {
             return res.status(400).json({ message: 'ID inválido.' })
         }
 
         const agente = await agentesRepository.findById(id)
 
-        if (!agente) 
-        {
+        if (!agente) {
             return res.status(404).json({ message: 'Agente não encontrado.' })
         }
 
         res.status(200).json(agente)
-    } catch (error) 
-    {
-        handlerError(res, error)
+    } catch (error) {
+        return handleError(res, 500, error.message)
     }
 }
 
@@ -50,7 +49,7 @@ async function createAgente(req, res) {
         const agenteCriado = await agentesRepository.create(newAgente)
         res.status(201).json(agenteCriado)
     } catch (error) {
-    handlerError(res, error)
+        return handleError(res, 500, error.message)
     }
 }
 
@@ -78,7 +77,7 @@ async function updateAgente(req, res) {
         const agenteAtualizado = await agentesRepository.update(id, { nome, dataDeIncorporacao, cargo })
         res.status(200).json(agenteAtualizado)
     } catch (error) {
-    handlerError(res, error)
+        return handleError(res, 500, error.message)
     }
 }
 
@@ -89,7 +88,7 @@ async function patchAgente(req, res) {
         const camposValidos = ['nome', 'dataDeIncorporacao', 'cargo']
         const cargosValidos = ['delegado', 'investigador', 'escrivao', 'policial']
         if ('id' in updates) {
-            return res.status(400).json({ message: "O campo 'id' não pode ser alterado." })
+            return res.status(400).json({ message: "O campo 'id' não pode ser alterado." }) 
         }
         const camposAtualizaveis = Object.keys(updates).filter(campo => camposValidos.includes(campo))
         if (updates.nome && typeof updates.nome !== 'string') {
@@ -111,10 +110,15 @@ async function patchAgente(req, res) {
         if (!agenteExistente) {
             return res.status(404).json({ message: 'Agente não encontrado.' })
         }
-        const patchedAgente = await agentesRepository.patchById(id, updates)
+
+        const filteredUpdates = {}
+        camposAtualizaveis.forEach(campo => filteredUpdates[campo] = updates[campo])
+        const patchedAgente = await agentesRepository.patchById(id, filteredUpdates)
+
+
         res.status(200).json(patchedAgente)
     } catch (error) {
-    handlerError(res, error)
+        return handleError(res, 500, error.message)
     }
 }
 
@@ -128,7 +132,7 @@ async function deleteAgente(req, res) {
         await agentesRepository.deleteById(id)
         res.status(204).send()
     } catch (error) {
-    handlerError(res, error)
+        return handleError(res, 500, error.message)
     }
 }
 

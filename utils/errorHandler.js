@@ -1,10 +1,5 @@
-function handlerError(res, error, statusCode = 500){
-    console.error(error)
-
-    res.status(statusCode).json({
-        message: "Ocorreu um erro no servidor.",
-        error: error.message || error
-    })
+function handleError(res, statusCode, message) {
+  return res.status(statusCode).json({ error: message })
 }
 
-module.exports = handlerError
+module.exports = handleError

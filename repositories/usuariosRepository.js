@@ -1,7 +1,7 @@
 const knex = require('../db/db')
 
 async function findByEmail(email) {
-  return await knex('usuarios').where({ email }).first()
+    return await knex('usuarios').where({ email }).first()
 }
 
 async function findUserById(id) {
@@ -9,29 +9,25 @@ async function findUserById(id) {
 }
 
 async function insertUser(usuario) {
-    const [newId] = await knex('usuarios').insert(usuario).returning('id')
-    return findUserById(newId)
+    const [inserted] = await knex('usuarios').insert(usuario).returning('id')
+    return findUserById(inserted.id) 
 }
 
 async function update(id, usuario) {
     const count = await knex('usuarios').where({ id }).update(usuario)
-    
-    if( count === 0 ) return null
-    return findById(id)
+    if (count === 0) return null
+    return findUserById(id)
 }
 
 async function patchById(id, updateUsuario) {
     const count = await knex('usuarios').where({ id }).update(updateUsuario)
-    
-    if( count === 0 ) return null
-    return findById(id)    
+    if (count === 0) return null
+    return findUserById(id)
 }
 
 async function deleteById(id) {
-    const usuario = await findById(id)
-
-    if(!usuario) return null
-
+    const usuario = await findUserById(id)
+    if (!usuario) return null
     await knex('usuarios').where({ id }).del()
     return true
 }
